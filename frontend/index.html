@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>MedPulse AI</title>
+</head>
+<body>
+
+<h2>Upload Prescription</h2>
+<input type="file" id="file">
+<button onclick="upload()">Predict</button>
+
+<h3 id="result"></h3>
+
+<button onclick="downloadExcel()">Download Excel</button>
+<button onclick="sendEmail()">Send Email</button>
+
+<script>
+async function upload() {
+  const file = document.getElementById("file").files[0];
+  const formData = new FormData();
+  formData.append("file", file);
+
+  const res = await fetch("http://127.0.0.1:5000/predict", {
+    method: "POST",
+    body: formData
+  });
+
+  const data = await res.json();
+  document.getElementById("result").innerText =
+    "Burnout: " + data.prediction + " | Confidence: " + data.confidence;
+}
+
+function downloadExcel() {
+  window.open("http://127.0.0.1:5000/download-excel");
+}
+
+async function sendEmail() {
+  await fetch("http://127.0.0.1:5000/send-email", { method: "POST" });
+  alert("Email sent!");
+}
+</script>
+
+</body>
+</html>
