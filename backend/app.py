@@ -10,53 +10,40 @@ CORS(app)
 
 DATA_FILE = "data/records.json"
 
-# Load existing data
 def load_data():
     if not os.path.exists(DATA_FILE):
         return []
     with open(DATA_FILE, "r") as f:
         return json.load(f)
 
-# Save data
 def save_data(data):
     with open(DATA_FILE, "w") as f:
         json.dump(data, f, indent=4)
 
-# -------------------------------
-# 📌 1. Upload + Predict
-# -------------------------------
 @app.route("/predict", methods=["POST"])
 def predict():
     file = request.files["file"]
-    filepath = f"temp/{file.filename}"
     os.makedirs("temp", exist_ok=True)
+    filepath = os.path.join("temp", file.filename)
     file.save(filepath)
 
     result = predict_burnout(filepath)
 
     data = load_data()
-
     new_entry = {
         "id": len(data) + 1,
         "burnout": result["prediction"],
         "confidence": result["confidence"]
     }
-
     data.append(new_entry)
     save_data(data)
 
     return jsonify(result)
 
-# -------------------------------
-# 📌 2. Get all records
-# -------------------------------
 @app.route("/records", methods=["GET"])
 def get_records():
     return jsonify(load_data())
 
-# -------------------------------
-# 📌 3. Download Excel
-# -------------------------------
 @app.route("/download-excel", methods=["GET"])
 def download_excel():
     data = load_data()
@@ -67,15 +54,11 @@ def download_excel():
 
     return send_file(file_path, as_attachment=True)
 
-# -------------------------------
-# 📌 4. Send Email
-# -------------------------------
 @app.route("/send-email", methods=["POST"])
 def email():
     data = load_data()
     send_email(data)
     return jsonify({"message": "Email sent successfully"})
 
-# -------------------------------
 if __name__ == "__main__":
     app.run(debug=True)
